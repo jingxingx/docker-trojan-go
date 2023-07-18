@@ -6,45 +6,21 @@ services:
     image: p4gefau1t/trojan-go
     restart: always
     ports:
-      - 443:443
+      - "443:443"
+      - "443:443/udp"
     volumes:
         - ./config.json:/etc/trojan-go/config.json
-        - ./acme/your_site:/opt/cert
+        - /opt/cert:/opt/cert
 
-  acme1:
-    container_name: acme1
-    image: neilpang/acme.sh
-    command: --register-account -m your_email
-    environment:
-       CF_Email: your_email
-       CF_Key: your_key
-    volumes:
-      - ./acme:/acme.sh
+    depends_on:
+      - caddy
 
-  acme2:
-    container_name: acme2
-    image: neilpang/acme.sh
-    command: --issue -d your_site --dns dns_cf
-    environment:
-       CF_Email: your_email
-       CF_Key: your_key
-    volumes:
-      - ./acme:/acme.sh
-
-  acme:
-    container_name: acme
-    image: neilpang/acme.sh
-    command: --cron
-    environment:
-       CF_Email: your_email
-       CF_Key: your_key
-    volumes:
-      - ./acme:/acme.sh
-
-  my_nginx:
-    container_name: my_nginx
-    image: nginx
+  caddy:
+    image: caddy
     restart: always
     ports:
-      - 80:80
-    privileged: true
+      - "80:80"
+    volumes:
+      - ./wwwroot:/usr/src
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./ssl:/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory
